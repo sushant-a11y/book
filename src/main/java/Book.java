@@ -209,7 +209,7 @@ public class Book {
         int endUnnecessary = 0;
         String startText;
         String endText;
-        startUnnecessary = this.text.indexOf("*** START OF THE PROJECT GUTENBERG EBOOK ");
+        startUnnecessary = this.text.indexOf("*** START OF THE PROJECT GUTENBERG EBOOK");
         for (int i = startUnnecessary + 6; i < text.length(); i++) {
             if (text.startsWith("***", i - 3)) {
                 startUnnecessary = i;
@@ -219,7 +219,7 @@ public class Book {
         }
         startText = text.substring(0, startUnnecessary);
         text = text.substring(startUnnecessary);
-        endUnnecessary = this.text.indexOf("*** END OF THE PROJECT GUTENBERG EBOOK ");
+        endUnnecessary = this.text.indexOf("*** END OF THE PROJECT GUTENBERG EBOOK");
 
         endText = text.substring(endUnnecessary);
         text = text.substring(0, endUnnecessary);
