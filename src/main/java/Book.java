@@ -226,6 +226,10 @@ public class Book {
         this.writeOutBook(startText + translateSentence(this.text, true) + endText);
     }
 
+    public int getWordCount(){
+        return wordCount;
+    }
+
     private void writeOutBook(String text) throws IOException {
         String outDirectory = "Anslatedtray Extstay";
         try {
