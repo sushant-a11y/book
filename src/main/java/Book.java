@@ -6,7 +6,6 @@
 
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -227,7 +226,10 @@ public class Book {
     }
 
     public int getWordCount(){
-        return wordCount;
+        return this.wordCount;
+    }
+    public String getBookName(){
+        return this.bookName;
     }
 
     private void writeOutBook(String text) throws IOException {
