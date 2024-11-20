@@ -6,44 +6,42 @@
 
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarStyle;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
 public class Book {
-    protected final String vowels = "aeiouy";
-    protected final String punctuation = ";:'\",.?!$*()&\n_“‘’”";
-    protected final String numbers = "1234567890";
-    protected URL file;
-    protected int wordCount = 0;
-    ProgressBar progressBar;
+    private final String vowels = "aeiouy";
+    private final String punctuation = ";:'\",.?!$*()&\n_“‘’”[]";
+    private final String numbers = "1234567890";
+    private final URL url;
+    private final String bookName;
+    private int wordCount = 0;
+    private final ProgressBar progressBar;
     private String text = "";
     private int currentWord = 0;
-    private String fileName = "";
-    private String bookName = "";
 
-    public Book(String url, String outFile, String bookName) throws java.io.IOException, URISyntaxException {
-        this.bookName = bookName;
-        this.fileName = outFile;
-        
+    public Book(String url) throws java.io.IOException, URISyntaxException {
         int bytesRead = 0;
-        this.file = new URI(url).toURL();
+        this.url = new URI(url).toURL();
 
-        // ProgressBar pb=new ProgressBar("Downloading Book...",100);
-        URLConnection connection = file.openConnection();
+
+        URLConnection connection = this.url.openConnection();
         int size = connection.getContentLength();
-        progressBar = ProgressBar.builder().setInitialMax(size).setTaskName("Downloading Book...").setUnit(" bytes", 1)
-                .setUpdateIntervalMillis(300)
-                .setStyle(
-                        ProgressBarStyle.builder().colorCode((byte) 37).fractionSymbols(" ▏▎▍▌▋▊▉").block('█').build())
-                .setMaxRenderedLength(120).build();
+        progressBar = ProgressBar.builder().setInitialMax(size).setTaskName("Downloading Book...").setUnit(" bytes", 1).setUpdateIntervalMillis(300).setStyle(ProgressBarStyle.builder().colorCode((byte) 37).fractionSymbols(" ▏▎▍▌▋▊▉").block('█').build()).setMaxRenderedLength(120).build();
 
-        Scanner myReader = new Scanner(file.openStream());
+        Scanner myReader = new Scanner(this.url.openStream());
 
         while (myReader.hasNextLine()) {
             String data = myReader.nextLine();
@@ -57,8 +55,16 @@ public class Book {
         progressBar.close();
 
         this.findWordCount();
-        this.bookName=text.substring(0,text.indexOf("The Project Gutenberg eBook of "));
-        System.out.println("book: " + bookName+"ase");
+
+        int newLineIndex = 0;
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == '\n') {
+                newLineIndex = i;
+                break;
+            }
+        }
+        this.bookName = text.substring(32, newLineIndex);
     }
 
     public String pigLatin(String word) {
@@ -149,8 +155,7 @@ public class Book {
         }
 
         if (capitalize) {
-            return beginningPunctuation + this.pigLatin(word).substring(0, 1).toUpperCase()
-                    + this.pigLatin(word).substring(1) + endingPunctuation;
+            return beginningPunctuation + this.pigLatin(word).substring(0, 1).toUpperCase() + this.pigLatin(word).substring(1) + endingPunctuation;
         } else {
             return beginningPunctuation + this.pigLatin(word) + endingPunctuation;
         }
@@ -161,10 +166,7 @@ public class Book {
         sentence = sentence.replaceAll("\n", " \n");
         ProgressBar bar = null;
         if (progressBar) {
-            bar = ProgressBar.builder().setInitialMax(wordCount).setTaskName("Translating Words... ")
-                    .setUnit(" words", 1).setUpdateIntervalMillis(300).setStyle(ProgressBarStyle.builder()
-                            .colorCode((byte) 37).fractionSymbols(" ▏▎▍▌▋▊▉").block('█').build())
-                    .setMaxRenderedLength(120).build();
+            bar = ProgressBar.builder().setInitialMax(wordCount).setTaskName("Translating Words... ").setUnit(" words", 1).setUpdateIntervalMillis(300).setStyle(ProgressBarStyle.builder().colorCode((byte) 37).fractionSymbols(" ▏▎▍▌▋▊▉").block('█').build()).setMaxRenderedLength(120).build();
         }
         StringBuilder retSentence = new StringBuilder();
         String[] words = sentence.split(" ");
@@ -178,10 +180,7 @@ public class Book {
         if (progressBar) {
             bar.stepTo(wordCount);
             bar.close();
-            bar = ProgressBar.builder().setInitialMax(wordCount).setTaskName("Joining Translated Words... ")
-                    .setUnit(" words", 1).setUpdateIntervalMillis(300).setStyle(ProgressBarStyle.builder()
-                            .colorCode((byte) 37).fractionSymbols(" ▏▎▍▌▋▊▉").block('█').build())
-                    .setMaxRenderedLength(120).build();
+            bar = ProgressBar.builder().setInitialMax(wordCount).setTaskName("Joining Translated Words... ").setUnit(" words", 1).setUpdateIntervalMillis(300).setStyle(ProgressBarStyle.builder().colorCode((byte) 37).fractionSymbols(" ▏▎▍▌▋▊▉").block('█').build()).setMaxRenderedLength(120).build();
         }
         currentWord = 0;
         for (int i = 0; i < translatedWords.size(); i++) {
@@ -228,10 +227,17 @@ public class Book {
     }
 
     private void writeOutBook(String text) throws IOException {
-        BufferedWriter writer = new BufferedWriter(
-                new FileWriter(this.translateSentence(this.bookName, false) + ".txt"));
-        writer.write(text);
-        writer.close();
+        String outDirectory = "Anslatedtray Extstay";
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outDirectory + "/" + this.translateSentence(this.bookName, false) + ".txt"));
+            writer.write(text);
+            writer.close();
+        } catch (java.io.FileNotFoundException e) {
+            Files.createDirectories(Paths.get(outDirectory));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(outDirectory + "/" + this.translateSentence(this.bookName, false) + ".txt"));
+            writer.write(text);
+            writer.close();
+        }
     }
 
     private void findWordCount() {
@@ -260,8 +266,7 @@ public class Book {
 
     private boolean sameCase(String str) {
         for (char c : str.toCharArray()) {
-            if (!(Character.isUpperCase(c)) || (Character.isLowerCase(c)))
-                return false;
+            if (!(Character.isUpperCase(c)) || (Character.isLowerCase(c))) return false;
         }
         return true;
     }
